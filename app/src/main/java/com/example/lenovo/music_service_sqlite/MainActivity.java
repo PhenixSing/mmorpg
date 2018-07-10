@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Service;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.support.v7.app.AppCompatActivity;
@@ -30,15 +31,17 @@ import static rx.schedulers.Schedulers.test;
 public class MainActivity extends AppCompatActivity {
     MediaPlayer mediaPlayer;
     String account,password;
+    String sure_password;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);//强制横屏
         //AudioManager music = (AudioManager) getSystemService(Service.AUDIO_SERVICE);
         play_music();
         Bmob.initialize(this, "82cd86b179c0069026f419c4ecbb2540");
-        mytest();
+        //mytest();
     }
 
     private void mytest() {
@@ -62,6 +65,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void play_music(){
+        if(mediaPlayer!=null)   mediaPlayer.stop();
         mediaPlayer = MediaPlayer.create(MainActivity.this,R.raw.heyige);
         mediaPlayer.setLooping(true);
         mediaPlayer.start();
@@ -70,17 +74,17 @@ public class MainActivity extends AppCompatActivity {
     public void button_start(View view) {
         mediaPlayer.stop();
         //Intent intent = new Intent(MainActivity.this,)
-        login_logup(view);
+        login_signup(view);
     }
 
-    public void login_logup(View view) {
+    public void login_signup(View view) {
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(R.string.not_login);
         builder.setPositiveButton(R.string.signup, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 //Intent intent = new
-
+                signup_view();
             }
         });
         builder.setNegativeButton(R.string.login, new DialogInterface.OnClickListener() {
@@ -93,6 +97,63 @@ public class MainActivity extends AppCompatActivity {
         builder.create().show();
 
     }
+
+    private void signup_view() {
+
+        final TableLayout signup_view = (TableLayout)
+                getLayoutInflater().inflate(R.layout.signup,null);
+        final AlertDialog builder = new AlertDialog.Builder(this)
+                .setView(signup_view)
+                .setPositiveButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+
+                    }
+                })
+                .setNegativeButton("登录",null)
+                .create();
+        builder.show();
+        builder.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText e = (EditText) signup_view.findViewById(R.id.editText_account);
+                if(e == null) Log.i("fm", "NULL");
+                account = e.getText().toString();
+                password = ((EditText) signup_view
+                        .findViewById(R.id.editText_password)).getText().toString();
+                sure_password = ((EditText) signup_view
+                        .findViewById(R.id.editText_sure_password)).getText().toString();
+                if(password.equals(sure_password)) {
+                    signup(account,password);
+                    builder.dismiss();
+                }
+                else
+                    Toast.makeText(MainActivity.this,
+                            R.string.password_not_equal, Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    private void signup(String account, String password) {
+        User p2 = new User();
+        p2.setAccount(account);
+        p2.setPassword(password);
+        p2.save(new SaveListener<String>() {
+            @Override
+            public void done(String objectId,BmobException e) {
+                if(e==null){
+                    Toast.makeText(MainActivity.this,
+                            "添加数据成功，返回objectId为："+objectId, Toast.LENGTH_SHORT).show();
+                    //toast("添加数据成功，返回objectId为："+objectId);
+                }else{
+                    //toast("创建数据失败：" + e.getMessage());
+                    Toast.makeText(MainActivity.this,
+                            "创建数据失败：" + e.getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+
     public  void login_view(){
         final TableLayout login_view = (TableLayout)
                 getLayoutInflater().inflate(R.layout.login,null);

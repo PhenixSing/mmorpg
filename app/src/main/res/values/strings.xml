@@ -9,4 +9,6 @@
     <string name="password">密码</string>
     <string name="id">手机号/邮箱/id</string>
     <string name="account">账户</string>
+    <string name="sure_password">确认密码</string>
+    <string name="password_not_equal">密码不相等</string>
 </resources>
